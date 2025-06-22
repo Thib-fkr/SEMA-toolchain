@@ -32,10 +32,10 @@ class GetThreadContext(angr.SimProcedure):
             thread_addr_conc = super_state.solver.eval(lpContext)
             if addr != 0 and addr in list(map(lambda a: thread_addr_conc + a, offsets)):
                 lw.warning(f"\n\nAccessed hardware breakpoints at address: {hex(addr)} (offset: {addr-thread_addr_conc})\n\n")
-                if "mem_bp_evasion" not in self.state["globals"]:
-                    self.state["globals"]["mem_bp_evasion"] = []
+                if "mem_bp_evasion" not in self.state.globals:
+                    self.state.globals["mem_bp_evasion"] = []
 
-                self.state["globals"]["mem_bp_evasion"].append(("Hardware Breakpoints", hex(addr), hex(addr,thread_addr_conc)))
+                self.state.globals["mem_bp_evasion"].append(("Hardware Breakpoints", hex(addr), hex(addr-thread_addr_conc)))
 
         self.state.inspect.b("mem_read", when=angr.BP_BEFORE, action=watch_HW_BP)
 
