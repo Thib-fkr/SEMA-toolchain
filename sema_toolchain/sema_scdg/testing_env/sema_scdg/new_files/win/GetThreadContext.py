@@ -22,7 +22,11 @@ class GetThreadContext(angr.SimProcedure):
             regval = self.state.memory.load(lpContext+offset, 8)
             self.state.add_constraints(regval == 0)
 
+        if "mem_bp_evasion" not in self.state.globals:
+            self.state.globals["mem_bp_evasion"] = []
+
         super_state = self.state
+        super_globals = self.state.globals
         def watch_HW_BP(bp_state):
             addr_sym = bp_state.inspect.mem_read_address
             if type(addr_sym) is not int and addr_sym.symbolic:
@@ -31,11 +35,9 @@ class GetThreadContext(angr.SimProcedure):
             addr = bp_state.solver.eval(addr_sym)
             thread_addr_conc = super_state.solver.eval(lpContext)
             if addr != 0 and addr in list(map(lambda a: thread_addr_conc + a, offsets)):
-                lw.warning(f"\n\nAccessed hardware breakpoints at address: {hex(addr)} (offset: {addr-thread_addr_conc})\n\n")
-                if "mem_bp_evasion" not in self.state["globals"]:
-                    self.state["globals"]["mem_bp_evasion"] = []
+                lw.warning(f"\nAccessed hardware breakpoints at address: {hex(addr)} (offset: {addr-thread_addr_conc})\n")
 
-                self.state["globals"]["mem_bp_evasion"].append(("Hardware Breakpoints", hex(addr), hex(addr,thread_addr_conc)))
+                super_globals["mem_bp_evasion"].append(("Hardware Breakpoints", hex(addr), hex(addr-thread_addr_conc)))
 
         self.state.inspect.b("mem_read", when=angr.BP_BEFORE, action=watch_HW_BP)
 

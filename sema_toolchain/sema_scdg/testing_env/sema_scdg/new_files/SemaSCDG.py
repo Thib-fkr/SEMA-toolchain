@@ -568,8 +568,11 @@ class SemaSCDG():
         if self.track_command:
             self.plugins.enable_plugin_commands(simgr, self.scdg_graph, exp_dir)
         if self.ioc_report:
-            if "mem_bp_evasion" in state.globals:
-                self.mem_bp_evasion.extend(state.globals["mem_bp_evasion"])
+            for st, s1 in simgr.stashes.items():
+                if len(s1) > 0:
+                    for s in s1:
+                        if hasattr(s, "globals") and "mem_bp_evasion" in s.globals:
+                            self.mem_bp_evasion.extend(s.globals["mem_bp_evasion"])
             self.plugins.enable_plugin_ioc(self.scdg_graph, self.mem_bp_evasion, exp_dir, )
 
     def run(self, exp_dir):

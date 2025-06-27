@@ -18,6 +18,7 @@ class SetupDiEnumDeviceInfo(angr.SimProcedure):
                 "retval_{}".format(self.display_name), self.arch.bits
             )
 
+
         # For Al-khaser (setupdi-diskdrive), likely to appear in a loop [0..], execute it only once
         i = self.state.solver.eval(MemberIndex)
         if i == 0:
