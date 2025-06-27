@@ -35,7 +35,9 @@ class strtok_s(angr.SimProcedure):
     def run(self, string, delimiters, context):
         if string.symbolic or delimiters.symbolic or context.symbolic:
             lw.warning("[+] Trying to execute strtok_s with symbolic arguments, returning NULL...")
-            return # TODO : check for better retval ?
+            return self.state.solver.BVS(
+                "retval_{}".format(self.display_name), self.arch.bits
+            )
 
         return 0 # NOTE: temporary al-khaser specific fix
 
@@ -49,20 +51,20 @@ class strtok_s(angr.SimProcedure):
         context_deref_ptr = self.state.mem[context_ptr].uintptr_t.resolved # TODO : check if it works on 32 bits architectures ?
         context_deref_bytes = self.state.mem[context_deref_ptr].string.concrete
 
-        # TODO : See the following link for error scenarios, not sure how NULL pointers are represented in angr yet.
+        # TODO : See the following link for error scenarios
         # https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/strtok-s-strtok-s-l-wcstok-s-wcstok-s-l-mbstok-s-mbstok-s-l?view=msvc-170#return-value
         # if delim_ptr == 0:
         #     lw.info("[-] No delimiter provided to strtok_s")
-        #     return None
+        #     return 0
     
         # if context_ptr == 0:
         #     lw.info("[-] No context provided to strtok_s")
-        #     return None
+        #     return 0
        
         # FIX : Cannot check truthiness of expression, expression could be symbolic
         # if first_token_ptr == 0 and context_deref_ptr == 0:
         #     lw.info("[-] Invalid parameters passed to strtok_s, no str and invalid context")
-        #     return None 
+        #     return 0
    
         # dest is the current token
         dest_ptr = first_token_ptr if first_token_bytes else context_deref_ptr
@@ -75,7 +77,7 @@ class strtok_s(angr.SimProcedure):
             return dest_ptr
         elif delim_index == 0:
             # The first char of dest_bytes is a delimiter
-            return None
+            return 0
 
         # Set the first occurence of the delimiter to \0
         self.state.mem[dest_ptr + delim_index].char = b'\0'
